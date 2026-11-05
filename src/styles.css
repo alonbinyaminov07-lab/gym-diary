@@ -33,7 +33,7 @@
   --r-lg: 20px; /* крупные блоки */
   --r-md: 14px; /* кнопки, поля */
   --r-sm: 10px; /* мелкие элементы */
-  --tabbar-h: 68px;
+  --tabbar-h: 60px;
   /* Нижняя «безопасная зона» (полоска «домой» на iPhone).
      Берём большее из значения браузера и значения, которое сообщает Telegram. */
   --safe-bottom: max(env(safe-area-inset-bottom, 0px), var(--tg-safe-area-inset-bottom, 0px));
@@ -276,11 +276,16 @@ input[type='date']::-webkit-calendar-picker-indicator {
 }
 
 .app-content {
-  padding-bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 16px);
+  padding-bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 8px);
+}
+
+/* На вкладках место под нижним меню уже оставлено — свой нижний отступ экрану не нужен */
+.app-content .screen {
+  padding-bottom: 0;
 }
 
 .screen {
-  padding: 12px 16px 24px;
+  padding: 8px 16px 20px;
   max-width: 640px;
   margin: 0 auto;
 }
@@ -290,8 +295,8 @@ input[type='date']::-webkit-calendar-picker-indicator {
   display: flex;
   align-items: center;
   gap: 8px;
-  min-height: 56px;
-  margin-bottom: 14px;
+  min-height: 48px;
+  margin-bottom: 10px;
 }
 
 .screen-header-right {
@@ -524,7 +529,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
 .empty {
   color: var(--hint);
   text-align: center;
-  padding: 24px 12px;
+  padding: 14px 12px;
   margin: 0;
 }
 
@@ -2061,15 +2066,15 @@ input[type='date']::-webkit-calendar-picker-indicator {
 
 /* ===== Календарь ===== */
 .calendar-card {
-  padding: 8px 10px 14px;
-  margin-bottom: 14px;
+  padding: 4px 8px 10px;
+  margin-bottom: 12px;
 }
 
 .month-nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 6px;
+  margin-bottom: 0;
 }
 
 .month-title {
@@ -2081,7 +2086,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
 .month {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
+  gap: 2px 4px;
 }
 
 /* Смена месяца: сетка въезжает со стороны нажатой стрелки */
@@ -2111,7 +2116,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   text-align: center;
   font-size: 12px;
   color: var(--hint);
-  padding: 4px 0 6px;
+  padding: 0 0 4px;
 }
 
 .month-wd.weekend {
@@ -2121,14 +2126,13 @@ input[type='date']::-webkit-calendar-picker-indicator {
 
 .day {
   position: relative;
-  aspect-ratio: 1 / 1.08;
-  min-height: 44px;
+  height: 42px;
   border-radius: var(--r-md);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 3px;
 }
 
 .day-empty {
@@ -2187,17 +2191,95 @@ input[type='date']::-webkit-calendar-picker-indicator {
 }
 
 .month-summary {
-  margin: 12px 6px 0;
+  margin: 8px 6px 0;
   font-size: 14px;
   color: var(--hint);
 }
 
 .start-btn {
-  margin-bottom: 26px;
+  margin-bottom: 20px;
 }
 
 .day-title {
   font-size: 17px;
+}
+
+/* Невысокие экраны (iPhone SE, маленькие Android): ещё компактнее, чтобы пустой день помещался без прокрутки */
+@media (max-height: 700px) {
+  .screen {
+    padding-top: 4px;
+  }
+
+  .calendar-card {
+    margin-bottom: 8px;
+  }
+
+  .screen-header {
+    min-height: 40px;
+    margin-bottom: 6px;
+  }
+
+  .screen-title {
+    font-size: 23px;
+  }
+
+  .day {
+    height: 36px;
+    gap: 2px;
+  }
+
+  .day-plates,
+  .day-plate {
+    height: 9px;
+  }
+
+  .month-nav .icon-btn {
+    height: 38px;
+  }
+
+  .month-summary {
+    margin-top: 6px;
+  }
+
+  .start-btn.btn-lg {
+    min-height: 50px;
+  }
+
+  .start-btn {
+    margin-bottom: 14px;
+  }
+
+  .empty {
+    padding: 8px 12px;
+  }
+}
+
+/* Совсем маленькие экраны (компактные Android в окне Telegram) */
+@media (max-height: 600px) {
+  .screen-title {
+    font-size: 21px;
+  }
+
+  .screen-header {
+    min-height: 36px;
+  }
+
+  .day {
+    height: 32px;
+  }
+
+  .day-plates,
+  .day-plate {
+    height: 7px;
+  }
+
+  .month-nav .icon-btn {
+    height: 34px;
+  }
+
+  .start-btn.btn-lg {
+    min-height: 46px;
+  }
 }
 
 /* Карточка проведённой тренировки */
