@@ -77,9 +77,11 @@ export function SetRow({
     setStamp(done);
     if (done) {
       haptic.medium();
-      restTimer.start(set.isWarmup ? Math.min(restSec, 60) : restSec);
+      restTimer.start(set.isWarmup ? Math.min(restSec, 60) : restSec, set.id);
     } else {
       haptic.light();
+      // Галочку сняли — отдых после этого подхода больше не нужен
+      restTimer.stopFor(set.id);
     }
   };
 
@@ -98,6 +100,7 @@ export function SetRow({
   const removeAnimated = () => {
     if (leaving) return;
     haptic.medium();
+    restTimer.stopFor(set.id);
     setLeaving(true);
     window.setTimeout(() => deleteSet(set.id), 180);
   };

@@ -7,6 +7,8 @@ import { useEffect, useState, useSyncExternalStore } from 'react';
 export interface RestState {
   endsAt: number;
   total: number;
+  /** какой подход запустил отдых — снятие с него галочки сбрасывает таймер */
+  setId?: string;
 }
 
 const KEY = 'gym-diary:rest';
@@ -34,17 +36,21 @@ function set(next: RestState | null) {
 }
 
 export const restTimer = {
-  start(sec: number) {
+  start(sec: number, setId?: string) {
     if (sec <= 0) return set(null);
-    set({ endsAt: Date.now() + sec * 1000, total: sec });
+    set({ endsAt: Date.now() + sec * 1000, total: sec, setId });
   },
   add(sec: number) {
     if (!state) return;
     const endsAt = Math.max(Date.now(), state.endsAt + sec * 1000);
-    set({ endsAt, total: Math.max(1, state.total + sec) });
+    set({ ...state, endsAt, total: Math.max(1, state.total + sec) });
   },
   stop() {
     set(null);
+  },
+  /** Сбросить отдых, если его запустил этот подход (галочку сняли или подход удалили) */
+  stopFor(setId: string) {
+    if (state?.setId === setId) set(null);
   },
 };
 
