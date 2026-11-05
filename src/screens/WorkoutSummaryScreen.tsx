@@ -38,7 +38,7 @@ export function WorkoutSummaryScreen({ sessionId }: { sessionId: string }) {
       <dl className="card ledger">
         <div className="ledger-row">
           <dt>Тоннаж</dt>
-          <dd>{fmtNum(summary.tonnage)} кг</dd>
+          <dd>{summary.tonnage > 0 ? `${fmtNum(summary.tonnage)} кг` : 'без веса'}</dd>
         </div>
         <div className="ledger-row">
           <dt>Рабочих подходов</dt>

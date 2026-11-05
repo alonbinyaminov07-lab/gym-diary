@@ -74,7 +74,7 @@ export function TemplatesScreen() {
                   {t.exercises.slice(0, 4).map((e) => (
                     <span key={e.exerciseId}>
                       {byId.get(e.exerciseId)?.name ?? '—'}{' '}
-                      <span className="hint-inline">
+                      <span className="hint-inline nowrap">
                         {e.sets}×{e.repsMin === e.repsMax ? e.repsMin : `${e.repsMin}–${e.repsMax}`}
                       </span>
                     </span>

@@ -23,7 +23,8 @@ export function fmtDuration(ms: number): string {
 /** Длительность словами: «1 ч 05 мин», «42 мин» */
 export function fmtDurationWords(ms: number): string {
   const min = Math.max(0, Math.round(ms / 60000));
-  if (min < 1) return 'меньше минуты';
+  // Коротко, чтобы помещалось в одну строку и в итоге тренировки, и в карточке истории
+  if (min < 1) return '< 1 мин';
   const h = Math.floor(min / 60);
   const m = min % 60;
   return h ? `${h} ч ${String(m).padStart(2, '0')} мин` : `${m} мин`;

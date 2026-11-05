@@ -328,6 +328,11 @@ input[type='date']::-webkit-calendar-picker-indicator {
   color: var(--hint);
 }
 
+/* Короткие связки вроде «3×8–12» не переносим посередине */
+.nowrap {
+  white-space: nowrap;
+}
+
 .card {
   background: var(--card);
   border-radius: var(--r-lg);
@@ -1249,6 +1254,12 @@ input[type='date']::-webkit-calendar-picker-indicator {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* На оранжевом фоне выполненного подхода серый текст тонет — делаем светлее */
+.set-row.done .set-prev {
+  color: rgba(236, 234, 228, 0.72); /* запасной цвет для старых браузеров */
+  color: color-mix(in srgb, var(--text) 72%, transparent);
 }
 
 .set-input {
@@ -2530,7 +2541,20 @@ input[type='date']::-webkit-calendar-picker-indicator {
 }
 
 .measure-label {
+  display: flex;
+  flex-direction: column;
   font-weight: 500;
+}
+
+/* Подсказка о необычном значении — мягкая, сохранить всё равно можно */
+.measure-warn .measure-input {
+  border-color: var(--mg-legs);
+}
+
+.measure-warn-text {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--mg-legs);
 }
 
 .measure-input-wrap {

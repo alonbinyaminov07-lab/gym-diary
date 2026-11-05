@@ -11,6 +11,16 @@ import { confirmDialog, haptic } from '../telegram/telegram';
 type Draft = Record<MeasurementKey, string>;
 const EMPTY: Draft = { weight: '', chest: '', waist: '', hips: '', arm: '', thigh: '' };
 
+/**
+ * Явно необычное значение — скорее всего, пропущена запятая (299 вместо 29,9).
+ * Сохранить можно, это только подсказка.
+ */
+function suspicious(key: MeasurementKey, raw: string): boolean {
+  const n = parseFloat(raw.replace(',', '.'));
+  if (!Number.isFinite(n) || n <= 0) return false;
+  return key === 'weight' ? n < 30 || n > 250 : n < 15 || n > 200;
+}
+
 const toField = (n?: number) => (n === undefined ? '' : String(n).replace('.', ','));
 const parse = (s: string) => {
   const n = parseFloat(s.replace(',', '.'));
@@ -91,8 +101,13 @@ export function MeasurementEditScreen({ id }: { id?: string }) {
 
       <div className="card measure-form">
         {MEASUREMENTS.map(({ key, label, unit }) => (
-          <label key={key} className="measure-row">
-            <span className="measure-label">{label}</span>
+          <label key={key} className={'measure-row' + (suspicious(key, draft[key]) ? ' measure-warn' : '')}>
+            <span className="measure-label">
+              {label}
+              {suspicious(key, draft[key]) && (
+                <span className="measure-warn-text">Проверьте: необычно {key === 'weight' ? 'большой или маленький вес' : 'для обхвата'}</span>
+              )}
+            </span>
             <span className="measure-input-wrap">
               <input
                 className="num-field measure-input"

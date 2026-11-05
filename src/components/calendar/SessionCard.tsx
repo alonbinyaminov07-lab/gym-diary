@@ -51,7 +51,8 @@ export function SessionCard({
           длительность
         </span>
         <span>
-          <b>{fmtNum(tonnage(done))} кг</b>
+          {/* Тренировка без веса (подтягивания, планка) — прочерк вместо «0 кг» */}
+          <b>{tonnage(done) > 0 ? `${fmtNum(tonnage(done))} кг` : '—'}</b>
           тоннаж
         </span>
         <span>
