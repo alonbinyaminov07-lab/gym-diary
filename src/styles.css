@@ -414,20 +414,42 @@ input[type='date']::-webkit-calendar-picker-indicator {
   color: var(--hint);
 }
 
-/* Активная вкладка: стеклянная «линза» под иконкой и красный цвет */
-.tabbar-item {
-  border-radius: 999px;
+/* Иконка в коробке одного размера — фото профиля стоит ровно в ряд с остальными */
+.tabbar-icon {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
 }
 
-.tabbar-item.active {
-  color: var(--accent-ink);
+/* Активная вкладка: стеклянная «линза» с отступами, чтобы не прилипала к соседям */
+.tabbar-item::before {
+  content: '';
+  position: absolute;
+  inset: 0 3px;
+  border-radius: 999px;
+  opacity: 0;
   background: rgba(255, 255, 255, 0.1);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.16),
     inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  transition: opacity var(--dur-state) var(--ease-out);
+  pointer-events: none;
 }
 
-:root[data-scheme='light'] .tabbar-item.active {
+.tabbar-item > * {
+  position: relative;
+}
+
+.tabbar-item.active {
+  color: var(--accent-ink);
+}
+
+.tabbar-item.active::before {
+  opacity: 1;
+}
+
+:root[data-scheme='light'] .tabbar-item::before {
   background: rgba(0, 0, 0, 0.05);
 }
 
@@ -2813,12 +2835,11 @@ input[type='date']::-webkit-calendar-picker-indicator {
 
 /* Мини-фото во вкладке «Профиль»: у выбранной — красная обводка */
 .tabbar-profile .avatar {
-  font-size: 11px !important;
   box-shadow: 0 0 0 1.5px var(--line);
 }
 
 .tabbar-profile.active .avatar {
-  box-shadow: 0 0 0 2px var(--accent-ink);
+  box-shadow: 0 0 0 1.5px var(--accent-ink);
 }
 
 /* Шестерёнка настроек — в углу поверх, не занимает отдельную строку */

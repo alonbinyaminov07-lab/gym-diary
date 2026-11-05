@@ -106,3 +106,10 @@ export const IconChevron = () => (
     <path d="M9 6l6 6-6 6" />
   </svg>
 );
+
+export const IconUser = () => (
+  <svg {...base}>
+    <circle cx="12" cy="8" r="4" />
+    <path d="M4.5 21c0-4.2 3.4-7 7.5-7s7.5 2.8 7.5 7" />
+  </svg>
+);
