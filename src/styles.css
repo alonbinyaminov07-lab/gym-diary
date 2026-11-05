@@ -86,6 +86,23 @@ body,
 #root {
   margin: 0;
   height: 100%;
+  /* Сама страница никогда не прокручивается — прокручиваются только экраны внутри.
+     Иначе iPhone даёт сдвинуть всё приложение вбок, и оно остаётся обрезанным. */
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+#root {
+  position: fixed;
+  inset: 0;
+}
+
+/* Строка с версией внизу «Настроек» */
+.app-version {
+  margin: 8px 0 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--hint);
 }
 
 body {

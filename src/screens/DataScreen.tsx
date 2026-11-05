@@ -235,7 +235,15 @@ export function DataScreen() {
         {busy ?? status ?? ''}
       </p>
 
+      <p className="app-version">Версия от {buildLabel()}</p>
+
       {sheet && <ActionSheet key={sheet.title} {...sheet} onClose={() => setRestoreSheet(null)} />}
     </div>
   );
+}
+
+/** «5 ноября, 16:40» — когда собрана версия, которая сейчас открыта */
+function buildLabel() {
+  const d = new Date(__BUILD_TIME__);
+  return d.toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
 }

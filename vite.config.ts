@@ -7,4 +7,6 @@ export default defineConfig({
   plugins: [react()],
   base: './',
   server: { port: 5173 },
+  // Время сборки — показывается внизу «Настроек», чтобы видеть, что телефон загрузил свежую версию
+  define: { __BUILD_TIME__: JSON.stringify(new Date().toISOString()) },
 });
