@@ -12,6 +12,8 @@ import { ExercisePickerScreen } from './screens/ExercisePickerScreen';
 import { WorkoutScreen } from './screens/WorkoutScreen';
 import { MeasurementEditScreen } from './screens/MeasurementEditScreen';
 import { DataScreen } from './screens/DataScreen';
+import { ProfileScreen } from './screens/ProfileScreen';
+import { ProfileEditScreen } from './screens/ProfileEditScreen';
 import { WorkoutSummaryScreen } from './screens/WorkoutSummaryScreen';
 import { ActiveWorkoutBanner } from './components/workout/ActiveWorkoutBanner';
 import { getActiveSession } from './db/workout';
@@ -33,7 +35,8 @@ export function App() {
 
 function Shell() {
   const { stack, push } = useNav();
-  const [tab, setTab] = useState<TabId>('calendar');
+  // Приложение открывается на профиле
+  const [tab, setTab] = useState<TabId>('profile');
   const rootRef = useRef<HTMLDivElement>(null);
 
   // Если приложение закрыли посреди тренировки — сразу возвращаем на неё
@@ -72,6 +75,7 @@ function Shell() {
     <>
       <Layer layerKey="root" state={top < 0 ? 'top' : 'behind'} isRoot innerRef={rootRef}>
         <main className="app-content">
+          {tab === 'profile' && <ProfileScreen />}
           {tab === 'calendar' && <CalendarScreen />}
           {tab === 'templates' && <TemplatesScreen />}
           {tab === 'exercises' && <ExercisesScreen />}
@@ -156,6 +160,8 @@ function RouteView({ route }: { route: StackEntry }) {
       return <MeasurementEditScreen id={route.id} />;
     case 'data':
       return <DataScreen />;
+    case 'profileEdit':
+      return <ProfileEditScreen />;
     case 'workout':
       return <WorkoutScreen sessionId={route.sessionId} />;
     case 'workoutSummary':

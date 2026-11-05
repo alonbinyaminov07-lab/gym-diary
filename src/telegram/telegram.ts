@@ -29,6 +29,8 @@ export interface TgThemeParams {
 
 interface TgWebApp {
   initData: string;
+  /** Данные пользователя без проверки подписи — только для отображения (имя, аватар) */
+  initDataUnsafe?: { user?: { id: number; first_name?: string; last_name?: string; photo_url?: string } };
   platform: string;
   version: string;
   colorScheme: 'light' | 'dark';

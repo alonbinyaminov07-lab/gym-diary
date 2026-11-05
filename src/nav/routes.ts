@@ -6,6 +6,7 @@ export type Route =
   | { name: 'templateEdit'; id?: string }
   | { name: 'measurementEdit'; id?: string }
   | { name: 'data' }
+  | { name: 'profileEdit' }
   | { name: 'workout'; sessionId: string }
   | { name: 'workoutSummary'; sessionId: string }
   | {

@@ -100,6 +100,34 @@ export interface SetEntry {
   note: string;
 }
 
+export type Sex = 'm' | 'f';
+export type Goal = 'strength' | 'mass' | 'cut' | 'fit';
+
+export const GOALS: Record<Goal, string> = {
+  strength: 'Сила',
+  mass: 'Набор массы',
+  cut: 'Похудение',
+  fit: 'Форма и здоровье',
+};
+
+/**
+ * Профиль пользователя (одна запись с id «me»).
+ * Текущий вес здесь не хранится — он берётся из последнего замера тела.
+ */
+export interface Profile {
+  id: 'me';
+  name: string;
+  /** фото, выбранное пользователем: квадратная JPEG-картинка в виде data:-адреса */
+  photo?: string;
+  sex?: Sex;
+  /** дата рождения YYYY-MM-DD — возраст считается сам */
+  birthDate?: string;
+  heightCm?: number;
+  targetWeight?: number;
+  goal?: Goal;
+  updatedAt: number;
+}
+
 export type MeasurementKey = 'weight' | 'chest' | 'waist' | 'hips' | 'arm' | 'thigh';
 
 export const MEASUREMENTS: { key: MeasurementKey; label: string; unit: string }[] = [

@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import type { BodyMeasurement, Exercise, Session, SetEntry, WorkoutTemplate } from './types';
+import type { BodyMeasurement, Exercise, Profile, Session, SetEntry, WorkoutTemplate } from './types';
 import { SEED_EXERCISES } from './seedExercises';
 
 /**
@@ -12,6 +12,7 @@ export class GymDB extends Dexie {
   sessions!: Table<Session, string>;
   sets!: Table<SetEntry, string>;
   measurements!: Table<BodyMeasurement, string>;
+  profile!: Table<Profile, string>;
 
   constructor() {
     super('gym-diary');
@@ -22,6 +23,10 @@ export class GymDB extends Dexie {
       sessions: 'id, date, templateId, startedAt',
       sets: 'id, sessionId, exerciseId, [sessionId+exerciseId]',
       measurements: 'id, date',
+    });
+    // Версия 2: добавлен профиль. Существующие данные не трогаются — Dexie просто добавит таблицу.
+    this.version(2).stores({
+      profile: 'id',
     });
 
     // Срабатывает один раз — при самом первом создании базы: заполняем справочник.

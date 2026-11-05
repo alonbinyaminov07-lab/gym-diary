@@ -1,7 +1,7 @@
 // Резервная копия: все данные приложения в одном JSON. Этот же формат используется
 // и для файла, и для облака Telegram.
 import { db } from '../db/db';
-import type { BodyMeasurement, Exercise, Session, SetEntry, WorkoutTemplate } from '../db/types';
+import type { BodyMeasurement, Exercise, Profile, Session, SetEntry, WorkoutTemplate } from '../db/types';
 import { restTimer } from '../workout/restTimer';
 
 export const BACKUP_APP = 'gym-diary';
@@ -13,6 +13,8 @@ export interface BackupData {
   sessions: Session[];
   sets: SetEntry[];
   measurements: BodyMeasurement[];
+  /** профиль с фото; в копиях до появления профиля этого поля нет */
+  profile?: Profile[];
 }
 
 export interface BackupFile {
@@ -32,18 +34,19 @@ export interface BackupCounts {
 
 /** Собрать копию всех данных. */
 export async function buildBackup(): Promise<BackupFile> {
-  const [exercises, templates, sessions, sets, measurements] = await Promise.all([
+  const [exercises, templates, sessions, sets, measurements, profile] = await Promise.all([
     db.exercises.toArray(),
     db.templates.toArray(),
     db.sessions.toArray(),
     db.sets.toArray(),
     db.measurements.toArray(),
+    db.profile.toArray(),
   ]);
   return {
     app: BACKUP_APP,
     version: BACKUP_VERSION,
     exportedAt: Date.now(),
-    data: { exercises, templates, sessions, sets, measurements },
+    data: { exercises, templates, sessions, sets, measurements, profile },
   };
 }
 
@@ -94,13 +97,17 @@ export function parseBackup(text: string): { ok: true; backup: BackupFile } | { 
   const sets = (d.sets as SetEntry[]).filter(
     (s) => sessionIds.has(s.sessionId) && Number.isFinite(s.weight) && Number.isFinite(s.reps),
   );
+  // Профиль — необязательный раздел; берём только корректную запись «me»
+  const profile = Array.isArray(d.profile)
+    ? (d.profile as Profile[]).filter((p) => isObj(p) && p.id === 'me' && typeof p.name === 'string')
+    : [];
   return {
     ok: true,
     backup: {
       app: BACKUP_APP,
       version: raw.version,
       exportedAt: typeof raw.exportedAt === 'number' ? raw.exportedAt : 0,
-      data: { ...(d as unknown as BackupData), sets },
+      data: { ...(d as unknown as BackupData), sets, profile },
     },
   };
 }
@@ -111,22 +118,19 @@ export function parseBackup(text: string): { ok: true; backup: BackupFile } | { 
  * replace — полностью заменить данные устройства содержимым копии.
  */
 export async function restoreBackup(backup: BackupFile, mode: 'merge' | 'replace') {
-  const { exercises, templates, sessions, sets, measurements } = backup.data;
-  await db.transaction('rw', [db.exercises, db.templates, db.sessions, db.sets, db.measurements], async () => {
+  const { exercises, templates, sessions, sets, measurements, profile = [] } = backup.data;
+  const tables = [db.exercises, db.templates, db.sessions, db.sets, db.measurements, db.profile];
+  await db.transaction('rw', tables, async () => {
     if (mode === 'replace') {
-      await Promise.all([
-        db.exercises.clear(),
-        db.templates.clear(),
-        db.sessions.clear(),
-        db.sets.clear(),
-        db.measurements.clear(),
-      ]);
+      await Promise.all(tables.map((t) => t.clear()));
     }
     await db.exercises.bulkPut(exercises);
     await db.templates.bulkPut(templates);
     await db.sessions.bulkPut(sessions);
     await db.sets.bulkPut(sets);
     await db.measurements.bulkPut(measurements);
+    // При «добавить к текущим» профиль из копии не затирает уже заполненный профиль
+    if (profile.length && (mode === 'replace' || !(await db.profile.get('me')))) await db.profile.bulkPut(profile);
   });
   if (mode === 'replace') restTimer.stop();
 }
