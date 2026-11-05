@@ -110,6 +110,12 @@ export const GOALS: Record<Goal, string> = {
   fit: 'Форма и здоровье',
 };
 
+/** Цели профиля в порядке списка GOALS (с учётом старой записи с одной целью) */
+export function goalsOf(p: Pick<Profile, 'goals' | 'goal'>): Goal[] {
+  const set = new Set<Goal>(p.goals ?? (p.goal ? [p.goal] : []));
+  return (Object.keys(GOALS) as Goal[]).filter((g) => set.has(g));
+}
+
 /**
  * Профиль пользователя (одна запись с id «me»).
  * Текущий вес здесь не хранится — он берётся из последнего замера тела.
@@ -124,6 +130,9 @@ export interface Profile {
   birthDate?: string;
   heightCm?: number;
   targetWeight?: number;
+  /** цели — можно выбрать несколько */
+  goals?: Goal[];
+  /** одна цель — так хранилось в первой версии профиля; читается через goalsOf */
   goal?: Goal;
   updatedAt: number;
 }

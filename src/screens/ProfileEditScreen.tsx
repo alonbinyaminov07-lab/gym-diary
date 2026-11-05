@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { loadProfile, prepareAvatar, saveCurrentWeight, saveProfile, telegramUser, weightInfo } from '../db/profile';
 import { todayISO } from '../db/db';
-import { GOALS, type Goal, type Profile, type Sex } from '../db/types';
+import { GOALS, goalsOf, type Goal, type Profile, type Sex } from '../db/types';
 import { Avatar } from '../components/Avatar';
 import { MainButton } from '../components/MainButton';
 import { ScreenHeader } from '../components/ScreenHeader';
@@ -23,7 +23,7 @@ interface Draft {
   height: string;
   weight: string;
   target: string;
-  goal?: Goal;
+  goals: Goal[];
 }
 
 /** Редактирование профиля. Текущий вес сохраняется как сегодняшний замер тела. */
@@ -45,7 +45,7 @@ export function ProfileEditScreen() {
         height: toField(p.heightCm),
         weight: toField(w.current),
         target: toField(p.targetWeight),
-        goal: p.goal,
+        goals: goalsOf(p),
       };
       setDraft(d);
       setInitial(JSON.stringify(d));
@@ -79,7 +79,7 @@ export function ProfileEditScreen() {
       birthDate: draft.birthDate || undefined,
       heightCm: parse(draft.height),
       targetWeight: parse(draft.target),
-      goal: draft.goal,
+      goals: draft.goals.length ? draft.goals : undefined,
     };
     await saveProfile(profile);
     const weight = parse(draft.weight);
@@ -180,10 +180,19 @@ export function ProfileEditScreen() {
       </div>
 
       <div className="field goal-field">
-        <span className="field-label">Цель</span>
+        <span className="field-label">Цели — можно выбрать несколько</span>
         <div className="chips chips-wrap">
           {(Object.keys(GOALS) as Goal[]).map((g) => (
-            <button key={g} className={'chip' + (draft.goal === g ? ' active' : '')} onClick={() => set({ goal: draft.goal === g ? undefined : g })}>
+            <button
+              key={g}
+              className={'chip' + (draft.goals.includes(g) ? ' active' : '')}
+              aria-pressed={draft.goals.includes(g)}
+              onClick={() => {
+                haptic.select();
+                const next = draft.goals.includes(g) ? draft.goals.filter((x) => x !== g) : [...draft.goals, g];
+                set({ goals: goalsOf({ goals: next }) });
+              }}
+            >
               {GOALS[g]}
             </button>
           ))}

@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { activity, ageFrom, bmi, loadProfile, prepareAvatar, saveProfile, weightInfo } from '../db/profile';
-import { GOALS } from '../db/types';
+import { GOALS, goalsOf } from '../db/types';
 import { Avatar } from '../components/Avatar';
 import { IconSettings } from '../components/icons';
 import { useNav } from '../nav/Nav';
@@ -47,7 +47,7 @@ export function ProfileScreen() {
   const left = target && weight.current ? Math.round((weight.current - target) * 10) / 10 : null;
 
   const subtitle = [
-    profile.goal ? GOALS[profile.goal] : null,
+    goalText(goalsOf(profile)),
     act.streakWeeks >= 2 ? `${act.streakWeeks} ${plural(act.streakWeeks, ['неделя', 'недели', 'недель'])} подряд в зале` : null,
   ]
     .filter(Boolean)
@@ -156,4 +156,11 @@ export function ProfileScreen() {
       </dl>
     </div>
   );
+}
+
+/** «Сила и похудение», «Сила, набор массы и форма» — цели одной фразой */
+function goalText(goals: (keyof typeof GOALS)[]): string | null {
+  if (!goals.length) return null;
+  const words = goals.map((g, i) => (i === 0 ? GOALS[g] : GOALS[g].toLowerCase()));
+  return words.length === 1 ? words[0] : words.slice(0, -1).join(", ") + " и " + words[words.length - 1];
 }
