@@ -405,7 +405,10 @@ input[type='date']::-webkit-calendar-picker-indicator {
 
 .tabbar-item {
   position: relative;
-  flex: 1;
+  /* Ширина кнопки = длина подписи + поровну свободного места:
+     длинным словам («Упражнения») достаётся больше, и подсветка их целиком накрывает */
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -413,7 +416,13 @@ input[type='date']::-webkit-calendar-picker-indicator {
   gap: 4px;
   font-size: 11px;
   font-weight: 500;
+  white-space: nowrap;
   color: var(--hint);
+}
+
+/* Запас по бокам подписи — внутри подсветки слово не касается её краёв */
+.tabbar-item > span:last-child {
+  padding: 0 4px;
 }
 
 /* Иконка в коробке одного размера — фото профиля стоит ровно в ряд с остальными */
@@ -428,8 +437,8 @@ input[type='date']::-webkit-calendar-picker-indicator {
 .tabbar-item::before {
   content: '';
   position: absolute;
-  /* Линза меньше кнопки со всех сторон — у краёв меню между ней и изгибом оболочки остаётся зазор */
-  inset: 2px 4px;
+  /* Линза по ширине кнопки и чуть ниже по высоте — между ней и изгибом оболочки остаётся зазор */
+  inset: 2px 0;
   border-radius: 999px;
   opacity: 0;
   background: rgba(255, 255, 255, 0.1);
