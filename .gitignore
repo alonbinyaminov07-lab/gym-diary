@@ -4,3 +4,5 @@ dist
 .DS_Store
 # личные настройки Claude Code на этом компьютере
 .claude/settings.local.json
+# служебный кэш инструмента дизайна
+.impeccable/hook.cache.json
