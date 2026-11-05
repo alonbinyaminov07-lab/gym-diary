@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
-  <!-- Иконка «Дневника тренировок»: гриф с блинами цветов групп мышц, оранжевая ручка -->
+  <!-- Иконка «Дневника тренировок»: гриф с блинами цветов групп мышц, красная ручка -->
   <rect width="640" height="640" rx="128" fill="#1C1D1F"/>
   <rect x="52" y="311" width="536" height="18" rx="9" fill="#5B5F66"/>
-  <rect x="246" y="306" width="148" height="28" rx="8" fill="#FF6B1A"/>
+  <rect x="246" y="306" width="148" height="28" rx="8" fill="#E11D48"/>
   <rect x="226" y="272" width="20" height="96" rx="6" fill="#B8BBC0"/>
   <rect x="394" y="272" width="20" height="96" rx="6" fill="#B8BBC0"/>
   <rect x="186" y="170" width="32" height="300" rx="9" fill="#E5484D"/>

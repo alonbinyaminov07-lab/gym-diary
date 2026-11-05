@@ -26,8 +26,8 @@ export function MainButton({
     const handler = () => clickRef.current();
     mb.setParams({
       text,
-      color: '#ff6b1a',
-      text_color: '#1a0c03',
+      color: '#e11d48',
+      text_color: '#ffffff',
       is_active: !disabled,
       is_visible: true,
     });

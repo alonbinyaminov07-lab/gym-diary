@@ -1,7 +1,8 @@
 /* =====================================================================
    Дизайн-система «Зал»
-   Фон — графит резинового пола, текст — мел, акцент — сигнальный оранжевый
-   (как замки на грифе). Группы мышц окрашены как соревновательные блины.
+   Фон — графит резинового пола, текст — мел, акцент — рубиновый красный.
+   Группы мышц окрашены как соревновательные блины. Парящие элементы
+   (нижнее меню, таймер, меню снизу, окна) — «жидкое стекло» в духе iOS 26.
    В Telegram фон/текст/подсказки подменяются цветами темы пользователя.
    ===================================================================== */
 :root {
@@ -12,10 +13,19 @@
   --hint: #8e9196;
   --line: rgba(236, 234, 228, 0.08);
 
-  --accent: #ff6b1a;
-  --accent-text: #1a0c03;
-  --accent-ink: #ff8a47;
-  --danger: #ff5c5c;
+  --accent: #e11d48; /* рубиновый красный */
+  --accent-text: #ffffff; /* текст на красной кнопке (контраст 4,7:1) */
+  --accent-ink: #ff4d6d; /* красный для текста и иконок на тёмном фоне (контраст 5,3:1) */
+  --accent-soft: rgba(225, 29, 72, 0.16);
+  --danger: #ff6b6b;
+
+  /* «Жидкое стекло»: полупрозрачная подложка + размытие + блик сверху + тонкая кромка */
+  --glass-bg: rgba(40, 42, 47, 0.58);
+  --glass-edge: rgba(255, 255, 255, 0.14);
+  --glass-shine: rgba(255, 255, 255, 0.22);
+  --glass-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0) 55%);
+  --glass-blur: blur(24px) saturate(185%);
+  --glass-shadow: 0 12px 32px rgba(0, 0, 0, 0.38);
 
   /* Цвета групп мышц — «блины» */
   --mg-chest: #e5484d;
@@ -56,7 +66,12 @@
   --text: #1c1d1f;
   --hint: #6c6f75;
   --line: rgba(28, 29, 31, 0.09);
-  --accent-ink: #c2410c;
+  --accent-ink: #be123c;
+  --glass-bg: rgba(255, 255, 255, 0.62);
+  --glass-edge: rgba(0, 0, 0, 0.08);
+  --glass-shine: rgba(255, 255, 255, 0.9);
+  --glass-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0) 60%);
+  --glass-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
   --mg-biceps: #c9ccd1;
   color-scheme: light;
 }
@@ -105,7 +120,7 @@ select {
 
 /* Части, которые рисует браузер, тоже в цветах приложения */
 ::selection {
-  background: rgba(255, 107, 26, 0.4); /* запасной цвет для старых браузеров */
+  background: rgba(225, 29, 72, 0.4); /* запасной цвет для старых браузеров */
   background: color-mix(in srgb, var(--accent) 40%, transparent);
   color: var(--text);
 }
@@ -276,7 +291,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
 }
 
 .app-content {
-  padding-bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 8px);
+  padding-bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 18px);
 }
 
 /* На вкладках место под нижним меню уже оставлено — свой нижний отступ экрану не нужен */
@@ -374,14 +389,15 @@ input[type='date']::-webkit-calendar-picker-indicator {
 /* ===== Нижняя навигация ===== */
 .tabbar {
   position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  left: 12px;
+  right: 12px;
+  bottom: calc(var(--safe-bottom) + 8px);
+  max-width: 480px;
+  margin: 0 auto;
   display: flex;
-  height: calc(var(--tabbar-h) + var(--safe-bottom));
-  padding-bottom: var(--safe-bottom);
-  background: var(--card);
-  border-top: 1px solid var(--line);
+  height: var(--tabbar-h);
+  padding: 5px;
+  border-radius: 999px;
   z-index: 10;
 }
 
@@ -398,21 +414,21 @@ input[type='date']::-webkit-calendar-picker-indicator {
   color: var(--hint);
 }
 
-/* Активная вкладка: оранжевая «замок-полоска» сверху */
-.tabbar-item.active {
-  color: var(--accent-ink);
+/* Активная вкладка: стеклянная «линза» под иконкой и красный цвет */
+.tabbar-item {
+  border-radius: 999px;
 }
 
-.tabbar-item.active::before {
-  content: '';
-  position: absolute;
-  top: -1px;
-  left: 50%;
-  width: 28px;
-  height: 3px;
-  margin-left: -14px;
-  border-radius: 0 0 3px 3px;
-  background: var(--accent);
+.tabbar-item.active {
+  color: var(--accent-ink);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+:root[data-scheme='light'] .tabbar-item.active {
+  background: rgba(0, 0, 0, 0.05);
 }
 
 /* ===== Списки ===== */
@@ -471,7 +487,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
 }
 
 .list-row-btn.selected {
-  background: rgba(255, 107, 26, 0.13); /* запасной цвет для старых браузеров */
+  background: rgba(225, 29, 72, 0.13); /* запасной цвет для старых браузеров */
   background: color-mix(in srgb, var(--accent) 13%, var(--card));
 }
 
@@ -1234,8 +1250,8 @@ input[type='date']::-webkit-calendar-picker-indicator {
 }
 
 .set-row.done {
-  background: rgba(255, 107, 26, 0.16); /* запасной цвет для старых браузеров */
-  background: color-mix(in srgb, var(--accent) 16%, var(--card));
+  background: rgba(225, 29, 72, 0.12); /* запасной цвет для старых браузеров */
+  background: color-mix(in srgb, var(--accent) 12%, var(--card));
 }
 
 .set-num {
@@ -1482,7 +1498,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   position: fixed;
   left: 12px;
   right: 12px;
-  bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 10px);
+  bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 18px);
   max-width: 616px;
   margin: 0 auto;
   display: flex;
@@ -1783,8 +1799,10 @@ input[type='date']::-webkit-calendar-picker-indicator {
 }
 
 .btn-danger-solid {
-  background: var(--danger);
-  color: #fff;
+  background: rgba(255, 107, 107, 0.16); /* запасной цвет для старых браузеров */
+  background: color-mix(in srgb, var(--danger) 16%, transparent);
+  color: var(--danger);
+  box-shadow: inset 0 0 0 1px rgba(255, 107, 107, 0.35);
 }
 
 /* Уход быстрее появления; уходящее окно уже не перехватывает нажатия */
@@ -2206,6 +2224,18 @@ input[type='date']::-webkit-calendar-picker-indicator {
 
 /* Невысокие экраны (iPhone SE, маленькие Android): ещё компактнее, чтобы пустой день помещался без прокрутки */
 @media (max-height: 700px) {
+  :root {
+    --tabbar-h: 56px;
+  }
+
+  .app-content {
+    padding-bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 10px);
+  }
+
+  .tabbar {
+    bottom: calc(var(--safe-bottom) + 6px);
+  }
+
   .screen {
     padding-top: 4px;
   }
@@ -2658,4 +2688,101 @@ input[type='date']::-webkit-calendar-picker-indicator {
   width: 22px;
   color: var(--hint);
   font-size: 14px;
+}
+
+/* =====================================================================
+   «Жидкое стекло» (в духе iOS 26) — только на парящих элементах:
+   нижнее меню, таймер отдыха, плашка «Продолжить», меню снизу, окна.
+   Полупрозрачная подложка + размытие того, что под ней, блик по верхней кромке
+   и тонкий светлый контур. Карточки с данными остаются плотными — так цифры
+   читаются лучше.
+   ===================================================================== */
+.tabbar,
+.rest-bar,
+.active-banner,
+.sheet,
+.dialog {
+  background: var(--glass-sheen), var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow:
+    inset 0 1px 0 var(--glass-shine),
+    inset 0 0 0 1px var(--glass-edge),
+    var(--glass-shadow);
+}
+
+/* Там, где размытие не поддерживается, стекло становится плотным — текст не теряется на фоне */
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .tabbar,
+  .rest-bar,
+  .active-banner,
+  .sheet,
+  .dialog {
+    background: var(--glass-sheen), var(--card);
+  }
+}
+
+/* Таймер отдыха: стекло, сквозь которое «наливается» красная полоса оставшегося времени */
+.rest-bar {
+  color: var(--text);
+}
+
+.rest-progress {
+  background: linear-gradient(90deg, rgba(225, 29, 72, 0.55), rgba(225, 29, 72, 0.35));
+}
+
+.rest-btn {
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.rest-bar-done {
+  background: var(--accent);
+  color: var(--accent-text);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* Плашка «идёт тренировка»: стекло, красная точка и красная кнопка «Продолжить» */
+.active-banner {
+  color: var(--text);
+}
+
+.active-banner-dot {
+  background: var(--accent-ink);
+}
+
+.active-banner-time {
+  color: var(--hint);
+}
+
+.active-banner-cta {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+/* Меню снизу и окна: кнопки — светлое стекло поверх стекла */
+.sheet-action {
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.sheet-action.selected {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.sheet-cancel {
+  background: transparent;
+  box-shadow: none;
+}
+
+.dialog .btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-scheme='light'] .sheet-action,
+:root[data-scheme='light'] .rest-btn,
+:root[data-scheme='light'] .dialog .btn-secondary {
+  background: rgba(0, 0, 0, 0.05);
 }
