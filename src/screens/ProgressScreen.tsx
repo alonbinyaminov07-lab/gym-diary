@@ -7,7 +7,7 @@ import { ScreenHeader } from '../components/ScreenHeader';
 import { PlateMark } from '../components/PlateMark';
 import { TrendChart, compactKg } from '../components/charts/TrendChart';
 import { MeasurementsSection } from '../components/charts/MeasurementsSection';
-import { IconBackup } from '../components/icons';
+import { IconSettings } from '../components/icons';
 import { useNav } from '../nav/Nav';
 import { fmtNum } from '../utils/format';
 import { plural } from '../utils/plural';
@@ -29,8 +29,8 @@ export function ProgressScreen() {
       <ScreenHeader
         title="Прогресс"
         right={
-          <button className="icon-btn header-action" onClick={() => nav.push({ name: 'data' })} aria-label="Данные и резервная копия">
-            <IconBackup />
+          <button className="icon-btn header-action" onClick={() => nav.push({ name: 'data' })} aria-label="Настройки: напоминания и резервная копия">
+            <IconSettings />
           </button>
         }
       />

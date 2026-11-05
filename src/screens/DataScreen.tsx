@@ -14,6 +14,7 @@ import { cloudInfo, cloudMode, loadFromCloud, saveToCloud, type CloudMeta } from
 import { copyText, readFile, saveFile } from '../backup/fileBackup';
 import { ActionSheet, type SheetAction } from '../components/ActionSheet';
 import { ScreenHeader } from '../components/ScreenHeader';
+import { BotSettingsSection } from '../components/BotSettingsSection';
 import { alertDialog, confirmDialog, haptic } from '../telegram/telegram';
 import { plural } from '../utils/plural';
 
@@ -34,7 +35,7 @@ function describe(c: BackupCounts): string {
   return parts.join(', ');
 }
 
-/** Экран «Данные»: что хранится, копия в облаке Telegram и в файле. */
+/** Экран «Настройки»: напоминания бота, что хранится на устройстве, копия в облаке Telegram и в файле. */
 export function DataScreen() {
   // Пересчитывается автоматически при любом изменении данных (например, после восстановления)
   const counts = useLiveQuery(() => currentCounts(), []);
@@ -141,8 +142,11 @@ export function DataScreen() {
 
   return (
     <div className="screen">
-      <ScreenHeader title="Данные" />
+      <ScreenHeader title="Настройки" />
 
+      <BotSettingsSection />
+
+      <h2 className="group-title data-heading">Данные на устройстве</h2>
       <p className="hint data-intro">
         Всё хранится в памяти этого устройства. Делайте копию, чтобы не потерять историю при смене телефона.
       </p>

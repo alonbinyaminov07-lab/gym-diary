@@ -1,0 +1,24 @@
+# Сервер бота «Дневник тренировок» на Cloudflare Workers (бесплатный тариф).
+name = "gym-diary-bot"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+
+# Каждые 30 минут сервер проверяет, кому пора отправить напоминание
+# (каждый получает его в выбранное время по своему часовому поясу).
+[triggers]
+crons = ["*/30 * * * *"]
+
+[vars]
+# Адрес приложения — на него ведёт кнопка «Открыть дневник» в сообщениях
+APP_URL = "https://alonbinyaminov07-lab.github.io/gym-diary/"
+# Откуда приложению разрешено обращаться к серверу
+APP_ORIGIN = "https://alonbinyaminov07-lab.github.io"
+
+# Хранилище настроек и коротких сводок тренировок (создано командой
+# `npx wrangler kv namespace create USERS`).
+[[kv_namespaces]]
+binding = "USERS"
+id = "6401f1f5076e492f9d3c4a7936310e93"
+
+# Секрет BOT_TOKEN (токен бота от BotFather) задаётся отдельно и в этот файл НЕ пишется:
+#   npx wrangler secret put BOT_TOKEN

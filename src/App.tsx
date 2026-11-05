@@ -17,6 +17,7 @@ import { ActiveWorkoutBanner } from './components/workout/ActiveWorkoutBanner';
 import { getActiveSession } from './db/workout';
 import { DialogHost } from './components/DialogHost';
 import { isTelegram, tg } from './telegram/telegram';
+import { syncBot } from './bot/botSync';
 
 // Экран с графиками грузится отдельно, только когда его открывают (библиотека графиков тяжёлая)
 const ProgressScreen = lazy(() => import('./screens/ProgressScreen').then((m) => ({ default: m.ProgressScreen })));
@@ -44,6 +45,11 @@ function Shell() {
       if (s) push({ name: 'workout', sessionId: s.id });
     });
   }, [push]);
+
+  // При запуске сообщаем боту часовой пояс, настройки и дату последней тренировки
+  useEffect(() => {
+    void syncBot();
+  }, []);
 
   // Пункт «Настройки» в меню «⋯» Telegram открывает экран «Данные» (резервная копия)
   useEffect(() => {

@@ -4,5 +4,9 @@ dist
 .DS_Store
 # личные настройки Claude Code на этом компьютере
 .claude/settings.local.json
+# сервер бота: локальные секреты и служебные файлы Cloudflare
+bot/node_modules
+bot/.dev.vars
+bot/.wrangler
 # служебный кэш инструмента дизайна
 .impeccable/hook.cache.json

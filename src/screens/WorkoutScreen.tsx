@@ -14,6 +14,7 @@ import {
 } from '../db/workout';
 import type { Exercise } from '../db/types';
 import { autoCloudBackup } from '../backup/cloudBackup';
+import { reportWorkout } from '../bot/botSync';
 import { ActionSheet, type SheetAction } from '../components/ActionSheet';
 import { MainButton } from '../components/MainButton';
 import { ScreenHeader } from '../components/ScreenHeader';
@@ -138,8 +139,9 @@ export function WorkoutScreen({ sessionId }: { sessionId: string }) {
     if (!(await confirmDialog(question, { ok: 'Завершить', cancel: 'Продолжить' }))) return;
     await finishWorkout(sessionId);
     restTimer.stop();
-    // Копия в облако Telegram — в фоне, пользователь её не ждёт
+    // В фоне, пользователь их не ждёт: копия в облако Telegram и итоги тренировки от бота
     autoCloudBackup();
+    void reportWorkout(sessionId);
     haptic.success();
     nav.replace({ name: 'workoutSummary', sessionId });
   };
