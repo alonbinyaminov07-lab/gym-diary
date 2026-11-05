@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "preview.html"
+        ],
+        "createdAt": "2026-11-04T21:24:12.531Z",
+        "reason": "Claude: .screen in the dev-only phone mockup is a device display; the app iframe is meant to run edge-to-edge to the bottom like a real iPhone screen"
+      }
+    ]
+  }
+}

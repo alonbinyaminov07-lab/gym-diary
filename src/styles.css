@@ -1,0 +1,2424 @@
+/* =====================================================================
+   Дизайн-система «Зал»
+   Фон — графит резинового пола, текст — мел, акцент — сигнальный оранжевый
+   (как замки на грифе). Группы мышц окрашены как соревновательные блины.
+   В Telegram фон/текст/подсказки подменяются цветами темы пользователя.
+   ===================================================================== */
+:root {
+  --bg: #1c1d1f;
+  --card: #26282b;
+  --card-2: #313337;
+  --text: #eceae4;
+  --hint: #8e9196;
+  --line: rgba(236, 234, 228, 0.08);
+
+  --accent: #ff6b1a;
+  --accent-text: #1a0c03;
+  --accent-ink: #ff8a47;
+  --danger: #ff5c5c;
+
+  /* Цвета групп мышц — «блины» */
+  --mg-chest: #e5484d;
+  --mg-back: #3e7bfa;
+  --mg-legs: #f5c518;
+  --mg-shoulders: #30a46c;
+  --mg-biceps: #e8e6e1;
+  --mg-triceps: #8b9298;
+  --mg-abs: #9e6cd8;
+  --mg-cardio: #12a594;
+
+  --font-display: 'Unbounded', 'Golos Text', system-ui, sans-serif;
+  --font-text: 'Golos Text', -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --r-lg: 20px; /* крупные блоки */
+  --r-md: 14px; /* кнопки, поля */
+  --r-sm: 10px; /* мелкие элементы */
+  --tabbar-h: 68px;
+  /* Нижняя «безопасная зона» (полоска «домой» на iPhone).
+     Берём большее из значения браузера и значения, которое сообщает Telegram. */
+  --safe-bottom: max(env(safe-area-inset-bottom, 0px), var(--tg-safe-area-inset-bottom, 0px));
+
+  /* Движение. Кривые — из правил анимации интерфейса (Emil Kowalski):
+     вход/выход — сильный ease-out, перемещение — ease-in-out, шторки и экраны — iOS-кривая. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --dur-press: 160ms; /* отклик на нажатие */
+  --dur-state: 200ms; /* смена состояния */
+  --dur-screen: 320ms; /* экран, шторка */
+  color-scheme: dark;
+}
+
+:root[data-scheme='light'] {
+  --bg: #efeee9;
+  --card: #ffffff;
+  --card-2: #e6e5df;
+  --text: #1c1d1f;
+  --hint: #6c6f75;
+  --line: rgba(28, 29, 31, 0.09);
+  --accent-ink: #c2410c;
+  --mg-biceps: #c9ccd1;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-text);
+  font-size: 16px;
+  line-height: 1.45;
+  overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* Поля ввода от 16px — иначе iOS увеличивает страницу при фокусе */
+input,
+textarea,
+select {
+  font: inherit;
+  font-size: 16px;
+  color: inherit;
+  caret-color: var(--accent);
+  accent-color: var(--accent);
+}
+
+/* Части, которые рисует браузер, тоже в цветах приложения */
+::selection {
+  background: rgba(255, 107, 26, 0.4); /* запасной цвет для старых браузеров */
+  background: color-mix(in srgb, var(--accent) 40%, transparent);
+  color: var(--text);
+}
+
+input[type='date']::-webkit-calendar-picker-indicator {
+  opacity: 0.6;
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Цифры везде одной ширины — столбцы весов и повторов не «пляшут» */
+.set-input,
+.stepper-value,
+.num-field,
+.day-num,
+.rest-value,
+.record-value {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== Общие анимации ===== */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+/* Появление снизу (плашки, новый подход) */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* Отклик на нажатие и плавная смена состояния у всех нажимаемых элементов.
+   Вкладки внизу намеренно без анимации — их переключают слишком часто. */
+.chip,
+.day,
+.measure-tile,
+.list-row-btn,
+.stepper-btn,
+.icon-btn,
+.sheet-action,
+.set-tool button,
+.rest-btn {
+  transition:
+    transform var(--dur-press) var(--ease-out),
+    background-color var(--dur-state) var(--ease-out),
+    color var(--dur-state) var(--ease-out),
+    border-color var(--dur-state) var(--ease-out);
+}
+
+.chip:active,
+.stepper-btn:active:not(:disabled),
+.sheet-action:active,
+.set-tool button:active,
+.rest-btn:active,
+.measure-tile:active {
+  transform: scale(0.96);
+}
+
+/* «Уменьшить движение» в системе: оставляем смену прозрачности и цвета,
+   убираем сдвиги и масштаб — анимации становятся мягче, а не исчезают */
+@media (prefers-reduced-motion: reduce) {
+  .motion-move {
+    animation-name: fade-in !important;
+  }
+
+  .motion-move-out {
+    animation-name: fade-out !important;
+  }
+
+  .btn:active:not(:disabled),
+  .set-check:active,
+  .icon-btn-accent:active:not(:disabled),
+  .chip:active,
+  .stepper-btn:active:not(:disabled),
+  .sheet-action:active,
+  .set-tool button:active,
+  .rest-btn:active,
+  .measure-tile:active,
+  .active-banner:active {
+    transform: none !important;
+  }
+}
+
+/* ===== Слои экранов ===== */
+.layer {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--bg);
+  transition: transform var(--dur-screen) var(--ease-drawer);
+}
+
+.layer-scroll {
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  /* на телефоне полосы прокрутки и так не видно — прячем и на компьютере */
+  scrollbar-width: none;
+}
+
+.layer-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Не верхний экран: виден под верхним, но не нажимается */
+.layer-hidden {
+  pointer-events: none;
+}
+
+/* Новый экран въезжает справа, с тенью по левому краю — видно, что он лёг поверх */
+.layer-enter-slide {
+  animation: screen-in var(--dur-screen) var(--ease-drawer);
+  box-shadow: -12px 0 32px rgba(0, 0, 0, 0.35);
+}
+
+/* Итог тренировки проявляется на месте: он не «глубже», а вместо тренировки */
+.layer-enter-fade {
+  animation: screen-fade-in var(--dur-screen) var(--ease-out);
+}
+
+/* Экран под верхним слегка уходит влево, как в iOS */
+.layer-behind {
+  transform: translateX(-22%);
+}
+
+.layer-leave {
+  animation: screen-out 240ms var(--ease-out) forwards;
+}
+
+@keyframes screen-in {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes screen-out {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes screen-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .layer-behind {
+    transform: none;
+  }
+}
+
+.app-content {
+  padding-bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 16px);
+}
+
+.screen {
+  padding: 12px 16px 24px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+/* ===== Заголовки ===== */
+.screen-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 56px;
+  margin-bottom: 14px;
+}
+
+.screen-header-right {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+
+.screen-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 26px;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.screen-title-sm {
+  font-size: 19px;
+  font-weight: 500;
+}
+
+.back-btn {
+  margin-left: -10px;
+}
+
+.hint {
+  color: var(--hint);
+  font-size: 14px;
+  margin: 0 0 12px;
+}
+
+.hint-inline {
+  color: var(--hint);
+}
+
+.card {
+  background: var(--card);
+  border-radius: var(--r-lg);
+}
+
+/* ===== «Блины» — цветные метки групп мышц ===== */
+.plate {
+  flex: none;
+  display: inline-block;
+  width: 6px;
+  border-radius: 3px;
+}
+
+.plate-sm {
+  height: 18px;
+}
+
+.plate-md {
+  height: 30px;
+}
+
+.plate-lg {
+  width: 7px;
+  height: 34px;
+}
+
+.plate-dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+/* ===== Нижняя навигация ===== */
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  height: calc(var(--tabbar-h) + var(--safe-bottom));
+  padding-bottom: var(--safe-bottom);
+  background: var(--card);
+  border-top: 1px solid var(--line);
+  z-index: 10;
+}
+
+.tabbar-item {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--hint);
+}
+
+/* Активная вкладка: оранжевая «замок-полоска» сверху */
+.tabbar-item.active {
+  color: var(--accent-ink);
+}
+
+.tabbar-item.active::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  width: 28px;
+  height: 3px;
+  margin-left: -14px;
+  border-radius: 0 0 3px 3px;
+  background: var(--accent);
+}
+
+/* ===== Списки ===== */
+.group {
+  margin-bottom: 22px;
+}
+
+.group-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 500;
+  margin: 0 4px 10px;
+}
+
+.group-count {
+  font-family: var(--font-text);
+  font-size: 13px;
+  color: var(--hint);
+}
+
+.list-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 60px;
+  padding: 12px 14px 12px 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.list-row:last-child {
+  border-bottom: 0;
+}
+
+.list-row-btn {
+  width: 100%;
+  text-align: left;
+}
+
+.list-row-btn:first-child {
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+}
+
+.list-row-btn:last-child {
+  border-radius: 0 0 var(--r-lg) var(--r-lg);
+}
+
+.list-row-btn:only-child {
+  border-radius: var(--r-lg);
+}
+
+.list-row-btn:active {
+  background: var(--card-2);
+}
+
+.list-row-btn.selected {
+  background: rgba(255, 107, 26, 0.13); /* запасной цвет для старых браузеров */
+  background: color-mix(in srgb, var(--accent) 13%, var(--card));
+}
+
+.list-row-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.list-row-title {
+  font-weight: 500;
+}
+
+.list-row-sub {
+  font-size: 13px;
+  color: var(--hint);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.tag {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0 7px;
+  border-radius: 6px;
+  background: var(--card-2);
+  color: var(--accent-ink);
+}
+
+.hint-icon {
+  color: var(--hint);
+  display: flex;
+}
+
+.check {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid var(--card-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.check.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+
+.empty {
+  color: var(--hint);
+  text-align: center;
+  padding: 24px 12px;
+  margin: 0;
+}
+
+/* ===== Кнопки ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 50px;
+  padding: 0 18px;
+  border-radius: var(--r-md);
+  font-weight: 600;
+  transition:
+    transform var(--dur-press) var(--ease-out),
+    opacity var(--dur-state) var(--ease-out);
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.btn-secondary {
+  background: var(--card-2);
+}
+
+.btn-ghost {
+  color: var(--accent-ink);
+  padding: 0 10px;
+}
+
+.btn-danger {
+  background: rgba(255, 92, 92, 0.13); /* запасной цвет для старых браузеров */
+  background: color-mix(in srgb, var(--danger) 13%, transparent);
+  color: var(--danger);
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.btn-lg {
+  min-height: 58px;
+  font-size: 17px;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: var(--r-md);
+  flex: none;
+}
+
+.icon-btn:active:not(:disabled) {
+  background: var(--card-2);
+}
+
+.icon-btn:disabled {
+  opacity: 0.25;
+}
+
+.icon-btn-accent {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.icon-btn-accent:active:not(:disabled) {
+  background: var(--accent);
+  transform: scale(0.94);
+}
+
+.icon-btn-danger {
+  color: var(--danger);
+}
+
+/* Главная кнопка (замена Telegram MainButton в браузере) */
+.main-button-spacer {
+  height: 92px;
+}
+
+.main-button-wrap {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 14px 16px calc(14px + var(--safe-bottom));
+  background: linear-gradient(transparent, var(--bg) 35%);
+  z-index: 20;
+}
+
+.main-button-wrap .btn {
+  max-width: 608px;
+  margin: 0 auto;
+  display: flex;
+}
+
+/* ===== Поиск и фильтры ===== */
+.search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--card);
+  border-radius: var(--r-md);
+  padding: 0 6px 0 14px;
+  color: var(--hint);
+  margin-bottom: 12px;
+}
+
+.search:focus-within {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  height: 52px;
+  background: none;
+  border: 0;
+  outline: none;
+  color: var(--text);
+}
+
+.search input::placeholder {
+  color: var(--hint);
+}
+
+.search input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin: 0 -16px 20px;
+  padding: 0 16px;
+  scrollbar-width: none;
+}
+
+.chips::-webkit-scrollbar {
+  display: none;
+}
+
+.chips-wrap {
+  flex-wrap: wrap;
+  overflow: visible;
+  margin: 0;
+  padding: 0;
+}
+
+.chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--card);
+  font-weight: 500;
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.chip.active {
+  background: var(--text);
+  color: var(--bg);
+}
+
+.chip:disabled:not(.active) {
+  opacity: 0.4;
+}
+
+/* ===== Формы ===== */
+.field {
+  display: block;
+  margin-bottom: 20px;
+}
+
+.field-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--hint);
+  margin: 0 4px 8px;
+}
+
+.input {
+  width: 100%;
+  height: 54px;
+  padding: 0 14px;
+  border-radius: var(--r-md);
+  border: 2px solid transparent;
+  background: var(--card);
+  outline: none;
+}
+
+.input:focus {
+  border-color: var(--accent);
+}
+
+.input:disabled {
+  opacity: 0.6;
+}
+
+.input.input-invalid {
+  border-color: var(--danger);
+}
+
+.field-error {
+  display: block;
+  margin: 8px 4px 0;
+  font-size: 13px;
+  color: var(--danger);
+}
+
+.input::placeholder {
+  color: var(--hint);
+}
+
+.input-lg {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.textarea {
+  height: auto;
+  padding: 12px 14px;
+  resize: vertical;
+}
+
+/* Цифры — широким шрифтом, как штамповка на блинах */
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stepper-btn {
+  width: 50px;
+  height: 46px;
+  border-radius: var(--r-md);
+  background: var(--card-2);
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.stepper-btn:active:not(:disabled) {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.stepper-btn:disabled {
+  opacity: 0.3;
+}
+
+.stepper-value {
+  min-width: 58px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+}
+
+.num-field {
+  width: 62px;
+  height: 46px;
+  text-align: center;
+  border-radius: var(--r-md);
+  border: 2px solid transparent;
+  background: var(--card-2);
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 17px;
+  outline: none;
+}
+
+.num-field:focus {
+  border-color: var(--accent);
+}
+
+.num-field.invalid {
+  border-color: var(--danger);
+}
+
+.te-error {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--danger);
+}
+
+/* ===== Карточка упражнения ===== */
+.meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: var(--card);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.note-card {
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  white-space: pre-wrap;
+}
+
+.history-card {
+  padding: 14px 16px;
+  margin-bottom: 10px;
+}
+
+.history-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.history-head .hint {
+  margin: 0;
+}
+
+.history-date {
+  font-weight: 600;
+}
+
+.history-set {
+  display: flex;
+  gap: 12px;
+  padding: 3px 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.history-set.warmup {
+  color: var(--hint);
+}
+
+.history-set-n {
+  width: 20px;
+  color: var(--hint);
+  font-weight: 600;
+}
+
+/* ===== Шаблоны тренировок ===== */
+.empty-card {
+  padding: 22px 20px 20px;
+}
+
+.empty-card p {
+  margin: 0 0 18px;
+  color: var(--hint);
+}
+
+.template-card {
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+
+.template-body {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 18px 14px;
+}
+
+.template-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.template-name {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+/* «Гриф» тренировки: блины разной высоты, нанизанные на штангу */
+.bar-stack {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 52px;
+  padding: 0 12px;
+}
+
+.bar-stack::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 3px;
+  margin-top: -1.5px;
+  border-radius: 2px;
+  background: var(--card-2);
+}
+
+.bar-plate {
+  position: relative;
+  width: 8px;
+  border-radius: 3px;
+}
+
+.template-meta {
+  font-size: 14px;
+  color: var(--hint);
+}
+
+.template-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 6px;
+  font-size: 15px;
+}
+
+.template-actions {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 8px;
+  padding: 0 14px 14px;
+}
+
+/* Редактор шаблона */
+.te-card {
+  padding: 10px 12px 6px 14px;
+  margin-bottom: 10px;
+}
+
+.te-card.dragging {
+  position: relative;
+  z-index: 5;
+  background: var(--card-2);
+  box-shadow: 0 0 0 2px var(--accent), 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+
+.te-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.te-head .icon-btn-danger {
+  margin-right: -6px;
+}
+
+.te-num {
+  flex: none;
+  min-width: 18px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--hint);
+}
+
+.te-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.te-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 58px;
+  border-top: 1px solid var(--line);
+}
+
+.te-label {
+  color: var(--hint);
+}
+
+.reps-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Ручка перетаскивания: крупная зона касания, без прокрутки страницы при захвате */
+.drag-handle {
+  flex: none;
+  width: 36px;
+  height: 50px;
+  margin-left: -10px;
+  margin-right: -6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--hint);
+  border-radius: var(--r-sm);
+  touch-action: none;
+  cursor: grab;
+}
+
+.drag-handle:active {
+  color: var(--accent-ink);
+  cursor: grabbing;
+}
+
+.add-btn {
+  margin-top: 6px;
+  background: transparent;
+  border: 1.5px dashed var(--card-2);
+  color: var(--accent-ink);
+}
+
+.danger-zone {
+  margin-top: 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ===== Тренировка ===== */
+/* Полоса над упражнениями: крупные часы тренировки и сделанное к этому моменту */
+.workout-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: -4px 0 22px;
+  padding: 0 4px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.workout-clock {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 40px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--accent-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.workout-tally {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-size: 14px;
+  color: var(--hint);
+  white-space: nowrap;
+}
+
+.workout-tally b {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 16px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.ex-block {
+  background: var(--card);
+  border-radius: var(--r-lg);
+  padding: 8px 10px 10px;
+  margin-bottom: 14px;
+}
+
+.ex-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0 8px 6px;
+}
+
+.ex-title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.ex-name {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 1.25;
+}
+
+.ex-sub {
+  font-size: 13px;
+  color: var(--hint);
+}
+
+.ex-menu {
+  color: var(--hint);
+}
+
+.ex-note {
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+
+/* Таблица подходов: № | прошлый | кг | повторы | ✓ */
+.set-head,
+.set-row {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 78px 62px 52px;
+  align-items: center;
+  gap: 6px;
+}
+
+.set-head {
+  padding: 0 4px 6px;
+  font-size: 12px;
+  color: var(--hint);
+}
+
+.set-head .set-head-num,
+.set-head span:nth-child(3),
+.set-head span:nth-child(4) {
+  text-align: center;
+}
+
+.set-item {
+  margin-bottom: 4px;
+}
+
+.set-swipe {
+  position: relative;
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+
+.set-swipe-bg {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 18px;
+  background: var(--danger);
+  color: #fff;
+  font-weight: 600;
+  border-radius: var(--r-md);
+}
+
+.set-row {
+  position: relative;
+  min-height: 56px;
+  padding: 5px 4px;
+  background: var(--card);
+  border-radius: var(--r-md);
+  touch-action: pan-y;
+  transition:
+    transform var(--dur-state) var(--ease-out),
+    background-color var(--dur-state) var(--ease-out);
+}
+
+/* Новый подход появляется снизу, а не возникает */
+.set-item.entering {
+  animation: rise-in var(--dur-state) var(--ease-out);
+}
+
+/* Удаление свайпом: строка уезжает влево до конца, потом исчезает */
+.set-row.leaving {
+  transform: translateX(-105%) !important;
+  transition: transform 180ms var(--ease-out) !important;
+}
+
+.set-row.active {
+  background: var(--card-2);
+}
+
+.set-row.done {
+  background: rgba(255, 107, 26, 0.16); /* запасной цвет для старых браузеров */
+  background: color-mix(in srgb, var(--accent) 16%, var(--card));
+}
+
+.set-num {
+  height: 44px;
+  border-radius: var(--r-sm);
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 16px;
+}
+
+.set-row.warmup .set-num {
+  color: var(--mg-legs);
+}
+
+.set-prev {
+  height: 44px;
+  text-align: left;
+  font-size: 14px;
+  color: var(--hint);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.set-input {
+  width: 100%;
+  height: 46px;
+  text-align: center;
+  border-radius: var(--r-sm);
+  border: 2px solid transparent;
+  background: var(--bg);
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+}
+
+.set-input::placeholder {
+  color: var(--hint);
+}
+
+.set-input:focus {
+  border-color: var(--accent);
+}
+
+.set-check {
+  height: 46px;
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  color: var(--hint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    transform var(--dur-press) var(--ease-out),
+    background-color var(--dur-state) var(--ease-out),
+    color var(--dur-state) var(--ease-out);
+}
+
+.set-check.on {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.set-check:active {
+  transform: scale(0.92);
+}
+
+/* Галочка прорисовывается штрихом, когда подход отмечают выполненным */
+.set-check.stamp path {
+  stroke-dasharray: 22;
+  animation: check-draw 260ms var(--ease-out);
+}
+
+@keyframes check-draw {
+  from {
+    stroke-dashoffset: 22;
+  }
+}
+
+/* Кнопки ± выдвигаются из-под подхода */
+.set-tools {
+  animation: rise-in var(--dur-state) var(--ease-out);
+}
+
+/* Кнопки ± под активным подходом */
+.set-delete {
+  width: 46px;
+  height: 46px;
+  border-radius: var(--r-sm);
+  background: rgba(255, 92, 92, 0.14); /* запасной цвет для старых браузеров */
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
+  color: var(--danger);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.set-tools {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 8px;
+  padding: 6px 4px 8px;
+}
+
+.set-tool {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 6px;
+}
+
+.set-tool span {
+  font-size: 13px;
+  color: var(--hint);
+}
+
+.set-tool button {
+  height: 46px;
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 15px;
+}
+
+.set-tool button:active {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.add-set {
+  margin-top: 4px;
+  min-height: 46px;
+  color: var(--accent-ink);
+}
+
+.workout-note {
+  margin-top: 24px;
+}
+
+/* Таймер отдыха */
+.rest-spacer {
+  height: 76px;
+}
+
+.rest-bar {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(92px + var(--safe-bottom));
+  max-width: 616px;
+  margin: 0 auto;
+  border-radius: var(--r-lg);
+  background: var(--text);
+  color: var(--bg);
+  overflow: hidden;
+  z-index: 25;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  /* таймер выезжает снизу, когда отмечен подход */
+  animation: sheet-up var(--dur-screen) var(--ease-drawer);
+}
+
+.rest-bar-tg {
+  bottom: calc(12px + var(--safe-bottom));
+}
+
+.rest-progress {
+  position: absolute;
+  inset: 0;
+  background: var(--accent);
+  transform-origin: left center;
+  transition: transform 0.25s linear;
+}
+
+.rest-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+}
+
+.rest-time {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+}
+
+.rest-label {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.rest-value {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+}
+
+.rest-btn {
+  height: 48px;
+  min-width: 56px;
+  padding: 0 10px;
+  border-radius: var(--r-md);
+  background: rgba(0, 0, 0, 0.12);
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.rest-skip {
+  font-family: var(--font-text);
+  font-weight: 600;
+}
+
+.rest-bar-done {
+  animation: none;
+  background: var(--accent);
+  color: var(--accent-text);
+  padding: 20px;
+  text-align: center;
+}
+
+.rest-done-text {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+}
+
+/* Плашка «идёт тренировка» над нижним меню */
+.active-banner {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 10px);
+  max-width: 616px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 10px 10px 16px;
+  border-radius: var(--r-lg);
+  background: var(--accent);
+  color: var(--accent-text);
+  text-align: left;
+  z-index: 11;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  animation: rise-in var(--dur-screen) var(--ease-out);
+  transition: transform var(--dur-press) var(--ease-out);
+}
+
+.active-banner:active {
+  transform: scale(0.98);
+}
+
+.active-banner-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent-text);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.active-banner-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.active-banner-name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.active-banner-time {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.active-banner-cta {
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  background: rgba(0, 0, 0, 0.14);
+  font-weight: 600;
+}
+
+/* Место под плашкой, чтобы она не закрывала низ списка (вместо :has — его нет в старых браузерах) */
+.banner-spacer {
+  height: 76px;
+}
+
+/* Экран «Данные» */
+.header-action {
+  color: var(--hint);
+}
+
+.data-intro {
+  margin: -4px 4px 16px;
+  font-size: 15px;
+}
+
+.data-section {
+  margin-top: 28px;
+}
+
+.data-section .hint {
+  margin: 0 4px 14px;
+}
+
+.data-status-line {
+  margin: 0 4px 6px;
+  font-weight: 500;
+}
+
+.data-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.data-status {
+  min-height: 1.5em;
+  margin: 20px 4px 0;
+  font-size: 14px;
+  color: var(--accent-ink);
+}
+
+/* Экран ошибки */
+.crash {
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 48px 20px;
+}
+
+.crash .hint {
+  margin: 12px 0 24px;
+  font-size: 16px;
+}
+
+.crash-detail {
+  margin-top: 24px;
+  font-size: 12px;
+  color: var(--hint);
+  word-break: break-word;
+}
+
+/* Окно подтверждения (вместо системного confirm) */
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.6);
+  animation: fade-in var(--dur-state) var(--ease-out);
+}
+
+.dialog {
+  width: 100%;
+  max-width: 340px;
+  padding: 22px 18px 18px;
+  border-radius: var(--r-lg);
+  background: var(--card);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  animation: dialog-in 250ms var(--ease-out);
+}
+
+.dialog-message {
+  margin: 0 0 20px;
+  font-size: 17px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.dialog-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.dialog-actions.single {
+  grid-template-columns: 1fr;
+}
+
+.dialog-actions .btn {
+  min-height: 52px;
+  padding: 0 10px;
+  line-height: 1.2;
+}
+
+.btn-danger-solid {
+  background: var(--danger);
+  color: #fff;
+}
+
+/* Уход быстрее появления; уходящее окно уже не перехватывает нажатия */
+.dialog-overlay.dialog-closing {
+  animation: fade-out 160ms var(--ease-out) forwards;
+  pointer-events: none;
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+/* Меню снизу */
+.sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fade-in var(--dur-state) var(--ease-out);
+}
+
+.sheet-overlay .sheet {
+  animation: sheet-up var(--dur-screen) var(--ease-drawer);
+}
+
+/* Уход быстрее появления */
+/* Уходящая шторка уже не перехватывает нажатия */
+.sheet-overlay.sheet-closing {
+  animation: fade-out 200ms var(--ease-out) forwards;
+  pointer-events: none;
+}
+
+.sheet-overlay.sheet-closing .sheet {
+  animation: sheet-down 200ms var(--ease-out) forwards;
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes sheet-down {
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet-overlay .sheet,
+  .sheet-overlay.sheet-closing .sheet {
+    animation: none;
+  }
+}
+
+.sheet {
+  width: 100%;
+  max-width: 640px;
+  padding: 10px 12px calc(12px + var(--safe-bottom));
+  background: var(--card);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.sheet-title {
+  padding: 8px 8px 6px;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 15px;
+  color: var(--hint);
+}
+
+.sheet-action {
+  min-height: 54px;
+  padding: 0 16px;
+  border-radius: var(--r-md);
+  background: var(--card-2);
+  text-align: left;
+  font-weight: 500;
+  font-size: 17px;
+}
+
+.sheet-action.selected {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.sheet-action.danger {
+  color: var(--danger);
+}
+
+.sheet-cancel {
+  margin-top: 4px;
+  background: transparent;
+  text-align: center;
+  color: var(--hint);
+}
+
+/* Итог тренировки */
+.summary-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2px;
+  margin: 8px 0 24px;
+}
+
+.summary-name {
+  color: var(--hint);
+}
+
+.summary-duration {
+  margin-top: 18px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 40px;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--accent-ink);
+}
+
+/* Гриф: втулка | блины | замок — ручка — замок | блины | втулка */
+.barbell {
+  position: relative;
+  width: 100%;
+  height: 108px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.barbell-shaft {
+  position: absolute;
+  left: 2%;
+  right: 2%;
+  top: 50%;
+  height: 6px;
+  margin-top: -3px;
+  border-radius: 3px;
+  background: var(--card-2);
+}
+
+.barbell-side {
+  position: relative;
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* Слева блины идут от замка к краю — переворачиваем порядок */
+.barbell-side-left {
+  flex-direction: row-reverse;
+}
+
+.barbell-grip {
+  position: relative;
+  flex: none;
+  width: 64px;
+  height: 8px;
+  border-radius: 2px;
+  /* насечка на ручке грифа */
+  background: repeating-linear-gradient(90deg, var(--card-2) 0 3px, var(--hint) 3px 4px);
+  opacity: 0.8;
+}
+
+.barbell-collar {
+  flex: none;
+  width: 8px;
+  height: 34%;
+  border-radius: 2px;
+  background: var(--hint);
+}
+
+.barbell-sleeve {
+  flex: 1;
+  height: 14px;
+  min-width: 12px;
+  border-radius: 3px;
+  background: linear-gradient(var(--card-2), var(--hint) 50%, var(--card-2));
+  opacity: 0.7;
+}
+
+.load-plate {
+  flex: none;
+  width: 14px;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+  animation: 420ms var(--ease-out) backwards;
+}
+
+.load-plate-left {
+  animation-name: plate-on-left;
+}
+
+.load-plate-right {
+  animation-name: plate-on-right;
+}
+
+/* Блин надевается с конца грифа и съезжает к замку */
+@keyframes plate-on-left {
+  from {
+    opacity: 0;
+    transform: translateX(-56px);
+  }
+}
+
+@keyframes plate-on-right {
+  from {
+    opacity: 0;
+    transform: translateX(56px);
+  }
+}
+
+/* Строки-ведомость вместо плиток с цифрами */
+.ledger {
+  margin: 0 0 28px;
+  padding: 4px 16px;
+}
+
+.ledger-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 50px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.ledger-row:last-child {
+  border-bottom: 0;
+}
+
+.ledger dt {
+  color: var(--hint);
+}
+
+.ledger dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.ledger-sub {
+  display: block;
+  margin-top: 1px;
+  font-family: var(--font-text);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--hint);
+}
+
+.record-row {
+  animation: rise-in 300ms var(--ease-out) backwards;
+}
+
+.record-value {
+  flex: none;
+  font-family: var(--font-display);
+  font-weight: 500;
+  color: var(--accent-ink);
+}
+
+/* ===== Календарь ===== */
+.calendar-card {
+  padding: 8px 10px 14px;
+  margin-bottom: 14px;
+}
+
+.month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.month-title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 17px;
+}
+
+.month {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+/* Смена месяца: сетка въезжает со стороны нажатой стрелки */
+.month-from-next {
+  animation: month-in-next 220ms var(--ease-out);
+}
+
+.month-from-prev {
+  animation: month-in-prev 220ms var(--ease-out);
+}
+
+@keyframes month-in-next {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+}
+
+@keyframes month-in-prev {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+}
+
+.month-wd {
+  text-align: center;
+  font-size: 12px;
+  color: var(--hint);
+  padding: 4px 0 6px;
+}
+
+.month-wd.weekend {
+  color: var(--hint); /* запасной цвет для старых браузеров */
+  color: color-mix(in srgb, var(--hint) 70%, var(--accent));
+}
+
+.day {
+  position: relative;
+  aspect-ratio: 1 / 1.08;
+  min-height: 44px;
+  border-radius: var(--r-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.day-empty {
+  pointer-events: none;
+}
+
+.day-num {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 15px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.day.future .day-num {
+  color: var(--hint);
+}
+
+.day.has-workout {
+  background: var(--card-2);
+}
+
+.day.has-workout .day-num {
+  font-weight: 700;
+}
+
+.day.today .day-num {
+  color: var(--accent-ink);
+}
+
+.day.selected {
+  background: var(--text);
+  color: var(--bg);
+}
+
+.day.selected .day-num {
+  color: var(--bg);
+}
+
+/* «Блины» под числом: группы мышц этого дня */
+.day-plates {
+  display: flex;
+  gap: 2px;
+  height: 12px;
+  align-items: center;
+}
+
+.day-plate {
+  width: 4px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.day.selected .day-plate {
+  box-shadow: 0 0 0 1px var(--text);
+}
+
+.month-summary {
+  margin: 12px 6px 0;
+  font-size: 14px;
+  color: var(--hint);
+}
+
+.start-btn {
+  margin-bottom: 26px;
+}
+
+.day-title {
+  font-size: 17px;
+}
+
+/* Карточка проведённой тренировки */
+.session-card {
+  padding: 14px 14px 8px 16px;
+  margin-bottom: 12px;
+}
+
+.session-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.session-title {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.session-name {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 17px;
+  line-height: 1.25;
+}
+
+.session-time {
+  font-size: 14px;
+  color: var(--hint);
+  font-variant-numeric: tabular-nums;
+}
+
+.session-head .ex-menu {
+  margin: -6px -6px 0 0;
+}
+
+.session-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 12px 0 6px;
+}
+
+.session-stats span {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  color: var(--hint);
+}
+
+.session-stats b {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 15px;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.session-exercises {
+  display: flex;
+  flex-direction: column;
+}
+
+.session-ex {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  text-align: left;
+  border-top: 1px solid var(--line);
+}
+
+.session-ex-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.session-ex-name {
+  font-weight: 500;
+}
+
+.session-ex-sets {
+  font-size: 14px;
+  color: var(--hint);
+  font-variant-numeric: tabular-nums;
+}
+
+.session-note {
+  margin: 0 0 8px;
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+  background: var(--bg);
+  font-size: 14px;
+  white-space: pre-wrap;
+}
+
+/* ===== Графики и статистика ===== */
+.chart-card {
+  padding: 14px 8px 10px 4px;
+  margin-bottom: 14px;
+}
+
+.chart-title {
+  margin: 0 8px 6px 12px;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 15px;
+}
+
+.chart {
+  width: 100%;
+}
+
+/* Recharts: убираем рамку фокуса у svg при касании */
+.chart svg:focus,
+.chart .recharts-surface:focus {
+  outline: none;
+}
+
+.chart-wait {
+  margin: 4px 12px 8px;
+}
+
+.chart-tip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  border-radius: var(--r-sm);
+  background: var(--text);
+  color: var(--bg);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.chart-tip-label {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.chart-tip-value {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 15px;
+}
+
+/* Эта неделя: семь дней с «блинами» тренировок и итог одной фразой */
+.week {
+  margin-bottom: 22px;
+}
+
+.week-strip {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
+.week-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 0 8px;
+  border-radius: var(--r-md);
+}
+
+.week-day.has-workout {
+  background: var(--card);
+}
+
+.week-day-wd {
+  font-size: 12px;
+  color: var(--hint);
+}
+
+.week-day-num {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 15px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.week-day.today .week-day-num {
+  color: var(--accent-ink);
+}
+
+.week-day.future .week-day-num {
+  color: var(--hint);
+}
+
+.week-day .day-plates {
+  height: 14px;
+}
+
+.week-day .day-plate {
+  height: 14px;
+}
+
+.week-headline {
+  margin: 0 4px 4px;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 20px;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.week-headline b {
+  font-weight: 700;
+  color: var(--accent-ink);
+}
+
+.week-sub {
+  margin: 0 4px;
+  font-size: 15px;
+  color: var(--hint);
+}
+
+/* Группы мышц: горизонтальные полосы с подписью */
+.group-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 6px 8px 6px 12px;
+}
+
+.group-bar {
+  display: grid;
+  grid-template-columns: auto 72px 1fr 32px;
+  align-items: center;
+  gap: 10px;
+}
+
+.group-bar-name {
+  font-size: 14px;
+}
+
+.group-bar-track {
+  height: 10px;
+  border-radius: 5px;
+  background: var(--card-2);
+  overflow: hidden;
+}
+
+.group-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 5px;
+}
+
+.group-bar-value {
+  text-align: right;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Замеры тела */
+.measure-section {
+  margin-top: 26px;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.section-head .group-title {
+  margin-bottom: 0;
+  font-size: 17px;
+}
+
+.measure-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 8px 0 14px;
+}
+
+.measure-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+  background: var(--card);
+  text-align: left;
+  border: 2px solid transparent;
+  min-width: 0;
+}
+
+.measure-tile.active {
+  border-color: var(--accent);
+}
+
+.measure-tile-label {
+  font-size: 13px;
+  color: var(--hint);
+}
+
+.measure-tile-value {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.measure-tile-delta {
+  font-size: 12px;
+  color: var(--hint);
+  font-variant-numeric: tabular-nums;
+  min-height: 1em;
+}
+
+.measure-values {
+  display: block;
+}
+
+.measure-form {
+  padding: 2px 14px;
+}
+
+.measure-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 62px;
+  border-bottom: 1px solid var(--line);
+}
+
+.measure-row:last-child {
+  border-bottom: 0;
+}
+
+.measure-label {
+  font-weight: 500;
+}
+
+.measure-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.measure-input {
+  width: 92px;
+}
+
+.measure-input::placeholder {
+  color: var(--hint);
+  opacity: 0.6;
+}
+
+.measure-unit {
+  width: 22px;
+  color: var(--hint);
+  font-size: 14px;
+}
