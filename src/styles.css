@@ -396,8 +396,10 @@ input[type='date']::-webkit-calendar-picker-indicator {
   margin: 0 auto;
   display: flex;
   height: var(--tabbar-h);
-  padding: 5px;
+  padding: 5px 6px;
   border-radius: 999px;
+  /* Ничего не выходит за капсулу, даже при нажатии */
+  overflow: hidden;
   z-index: 10;
 }
 
@@ -426,7 +428,8 @@ input[type='date']::-webkit-calendar-picker-indicator {
 .tabbar-item::before {
   content: '';
   position: absolute;
-  inset: 0 3px;
+  /* Линза меньше кнопки со всех сторон — у краёв меню между ней и изгибом оболочки остаётся зазор */
+  inset: 2px 4px;
   border-radius: 999px;
   opacity: 0;
   background: rgba(255, 255, 255, 0.1);
