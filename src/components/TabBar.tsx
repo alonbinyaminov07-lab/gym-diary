@@ -29,7 +29,7 @@ export function TabBar({ active, onChange }: { active: TabId; onChange: (t: TabI
   const tabs: { id: TabId; label: string; icon: ReactNode }[] = [
     { id: 'calendar', label: 'Календарь', icon: <IconCalendar /> },
     { id: 'templates', label: 'Тренировки', icon: <IconList /> },
-    { id: 'profile', label: 'Профиль', icon: hasPhoto ? <Avatar profile={profile} size={24} /> : <IconUser /> },
+    { id: 'profile', label: 'Профиль', icon: hasPhoto ? <Avatar profile={profile} size={21} /> : <IconUser /> },
     { id: 'exercises', label: 'Упражнения', icon: <IconDumbbell /> },
     { id: 'progress', label: 'Прогресс', icon: <IconChart /> },
   ];

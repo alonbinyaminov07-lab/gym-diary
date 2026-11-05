@@ -432,8 +432,8 @@ input[type='date']::-webkit-calendar-picker-indicator {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  font-size: 11px;
+  gap: 3px;
+  font-size: 10px;
   font-weight: 500;
   white-space: nowrap;
   color: var(--hint);
@@ -446,10 +446,16 @@ input[type='date']::-webkit-calendar-picker-indicator {
 
 /* Иконка в коробке одного размера — фото профиля стоит ровно в ряд с остальными */
 .tabbar-icon {
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
   display: grid;
   place-items: center;
+}
+
+/* Иконки меню чуть меньше, чем в остальном приложении */
+.tabbar-icon svg {
+  width: 22px;
+  height: 22px;
 }
 
 /* Стеклянная линза под выбранной вкладкой — одна на всё меню, переезжает с вкладки на вкладку.
@@ -3123,7 +3129,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
 /* Пять вкладок на узком экране: подписи чуть мельче, чтобы не налезали */
 @media (max-width: 380px) {
   .tabbar-item {
-    font-size: 10px;
+    font-size: 9.5px;
     letter-spacing: -0.02em;
   }
 }
