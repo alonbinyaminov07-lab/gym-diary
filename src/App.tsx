@@ -20,6 +20,7 @@ import { getActiveSession } from './db/workout';
 import { DialogHost } from './components/DialogHost';
 import { isTelegram, tg } from './telegram/telegram';
 import { syncBot } from './bot/botSync';
+import { useSwipeBack } from './nav/useSwipeBack';
 
 // Экран с графиками грузится отдельно, только когда его открывают (библиотека графиков тяжёлая)
 const ProgressScreen = lazy(() => import('./screens/ProgressScreen').then((m) => ({ default: m.ProgressScreen })));
@@ -130,6 +131,9 @@ function Layer({
   useEffect(() => {
     if (outerRef.current) outerRef.current.inert = !isTop;
   }, [isTop]);
+  // Внутренний экран можно закрыть, смахнув вправо
+  const { pop } = useNav();
+  useSwipeBack(outerRef, isTop && !isRoot, pop);
   const cls =
     'layer' +
     (enter ? ` layer-enter-${enter} motion-move` : '') +

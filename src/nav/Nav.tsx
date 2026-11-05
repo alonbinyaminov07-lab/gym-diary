@@ -27,7 +27,8 @@ interface NavApi {
   push(route: Route): void;
   /** Заменить верхний экран другим (например, тренировку — её итогом) */
   replace(route: Route): void;
-  pop(): Promise<void>;
+  /** Назад с учётом вопроса «Выйти без сохранения?»; true — экран ушёл */
+  pop(): Promise<boolean>;
   /** Снять экран без проверки (например, после сохранения) */
   forcePop(): void;
   setGuard(key: string, guard: Guard | null): void;
@@ -55,10 +56,11 @@ export function NavProvider({ children }: { children: ReactNode }) {
   const pop = useCallback(async () => {
     const s = stackRef.current;
     const top = s[lastActiveIndex(s)];
-    if (!top) return;
+    if (!top) return false;
     const guard = guards.current.get(top.key);
-    if (guard && !(await guard())) return;
+    if (guard && !(await guard())) return false;
     forcePop();
+    return true;
   }, [forcePop]);
 
   const api = useMemo<NavApi>(
