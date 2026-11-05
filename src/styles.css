@@ -1566,6 +1566,30 @@ input.input[type='time']::-webkit-calendar-picker-indicator {
   bottom: calc(12px + var(--safe-bottom));
 }
 
+/* Отдых закончился или сброшен — плашка уезжает вниз за край экрана и тает */
+.rest-bar-leave > .rest-bar {
+  pointer-events: none;
+  animation: rest-bar-down 240ms cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes rest-bar-down {
+  to {
+    transform: translateY(calc(100% + 120px));
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rest-bar-leave > .rest-bar {
+    animation: rest-bar-fade 160ms linear forwards;
+  }
+  @keyframes rest-bar-fade {
+    to {
+      opacity: 0;
+    }
+  }
+}
+
 .rest-progress {
   position: absolute;
   inset: 0;

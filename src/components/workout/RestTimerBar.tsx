@@ -1,10 +1,44 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { restTimer, useRestTimer } from '../../workout/restTimer';
 import { haptic, isTelegram } from '../../telegram/telegram';
 import { fmtRest } from '../../utils/format';
 
-/** Плашка таймера отдыха внизу экрана тренировки. Вибрирует по окончании. */
+/** Сколько длится уход плашки вниз (совпадает с .rest-bar-leave в styles.css) */
+const LEAVE_MS = 240;
+
+/**
+ * Плашка таймера отдыха внизу экрана тренировки. Вибрирует по окончании.
+ * Выезжает снизу и, когда отдых закончился или его сбросили, уезжает обратно вниз.
+ */
 export function RestTimerBar() {
+  const view = useRestView();
+  // Последний показанный вид — его и «увозим» вниз, когда плашка больше не нужна
+  const last = useRef<ReactNode>(null);
+  const [leaving, setLeaving] = useState<ReactNode>(null);
+
+  useLayoutEffect(() => {
+    if (view) {
+      last.current = view;
+      setLeaving(null);
+      return;
+    }
+    if (!last.current) return;
+    setLeaving(last.current);
+    last.current = null;
+    const id = window.setTimeout(() => setLeaving(null), LEAVE_MS);
+    return () => window.clearTimeout(id);
+  }, [view]);
+
+  if (view) return view;
+  if (!leaving) return null;
+  return (
+    <div className="rest-bar-leave" aria-hidden>
+      {leaving}
+    </div>
+  );
+}
+
+function useRestView(): ReactNode {
   const { rest, remainingMs } = useRestTimer();
   const [doneFlash, setDoneFlash] = useState(false);
   const firedFor = useRef<number | null>(null);
