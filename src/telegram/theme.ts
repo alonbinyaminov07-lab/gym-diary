@@ -1,8 +1,10 @@
 import { isTelegram, tg } from './telegram';
 
-// Цвета приложения задаются CSS-переменными (см. styles.css).
-// По умолчанию — тёмная тема. Внутри Telegram подхватываем цвета темы пользователя,
-// но акцентный (лаймовый) цвет оставляем своим — это «лицо» приложения.
+// Цвета приложения задаются CSS-переменными (см. styles.css): тёмная и светлая палитры.
+// Внутри Telegram берём только то, какая тема включена (тёмная или светлая), а сами цвета — свои.
+// Раньше подхватывались цвета темы Telegram, но в тёмной теме iPhone фон карточек там
+// совпадает с фоном экрана — поля ввода и карточки сливались с чёрным фоном,
+// и приложение выглядело не так, как в браузере.
 
 function applyTheme() {
   const root = document.documentElement;
@@ -10,21 +12,16 @@ function applyTheme() {
     root.dataset.scheme = 'dark';
     return;
   }
-  const p = tg.themeParams;
   root.dataset.scheme = tg.colorScheme;
-  const set = (name: string, value?: string) => {
-    if (value) root.style.setProperty(name, value);
-    else root.style.removeProperty(name);
-  };
-  set('--bg', p.bg_color);
-  set('--text', p.text_color);
-  set('--hint', p.hint_color);
-  set('--card', p.secondary_bg_color);
+  // Убираем цвета, которые могли остаться от прошлых версий
+  for (const name of ['--bg', '--text', '--hint', '--card']) root.style.removeProperty(name);
 
-  const bg = p.bg_color ?? getComputedStyle(root).getPropertyValue('--bg').trim();
+  // Шапка, фон под приложением и полоса под главной кнопкой Telegram — в цвет фона приложения
+  const bg = getComputedStyle(root).getPropertyValue('--bg').trim();
   try {
     tg.setHeaderColor?.(bg);
     tg.setBackgroundColor?.(bg);
+    if (tg.isVersionAtLeast('7.10')) tg.setBottomBarColor?.(bg);
   } catch {
     /* не поддерживается в старых версиях */
   }

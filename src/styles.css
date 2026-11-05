@@ -874,6 +874,31 @@ input[type='date']::-webkit-calendar-picker-indicator {
   border-color: var(--accent);
 }
 
+/* Дата и время: на iPhone такие поля по умолчанию без фона и с текстом по центру.
+   Сбрасываем системный вид — выглядят как остальные поля, текст слева. */
+input.input[type='date'],
+input.input[type='time'] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  min-width: 0;
+  line-height: 50px;
+  text-align: left;
+  color: var(--text);
+}
+
+input.input[type='date']::-webkit-date-and-time-value,
+input.input[type='time']::-webkit-date-and-time-value {
+  text-align: left;
+  margin: 0;
+}
+
+/* Значок календаря/часов в браузере на компьютере — приглушённый, как подсказки */
+input.input[type='date']::-webkit-calendar-picker-indicator,
+input.input[type='time']::-webkit-calendar-picker-indicator {
+  opacity: 0.6;
+}
+
 .input:disabled {
   opacity: 0.6;
 }

@@ -40,6 +40,7 @@ interface TgWebApp {
   isVersionAtLeast(v: string): boolean;
   setHeaderColor?(c: string): void;
   setBackgroundColor?(c: string): void;
+  setBottomBarColor?(c: string): void;
   disableVerticalSwipes?(): void;
   enableVerticalSwipes?(): void;
   onEvent(event: string, cb: () => void): void;
