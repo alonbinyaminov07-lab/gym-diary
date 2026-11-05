@@ -452,36 +452,84 @@ input[type='date']::-webkit-calendar-picker-indicator {
   place-items: center;
 }
 
-/* Активная вкладка: стеклянная «линза» с отступами, чтобы не прилипала к соседям */
-.tabbar-item::before {
-  content: '';
+/* Стеклянная линза под выбранной вкладкой — одна на всё меню, переезжает с вкладки на вкладку.
+   По высоте на 2px меньше кнопки: между ней и изгибом оболочки остаётся зазор. */
+.tabbar-lens {
   position: absolute;
-  /* Линза по ширине кнопки и чуть ниже по высоте — между ней и изгибом оболочки остаётся зазор */
-  inset: 2px 0;
+  top: 7px;
+  bottom: 7px;
+  left: 0;
   border-radius: 999px;
-  opacity: 0;
   background: rgba(255, 255, 255, 0.1);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.16),
     inset 0 0 0 1px rgba(255, 255, 255, 0.06);
-  transition: opacity var(--dur-state) var(--ease-out);
   pointer-events: none;
+  /* Переезд с лёгким «пружинящим» перелётом, как у жидкого стекла */
+  transition:
+    transform 420ms cubic-bezier(0.3, 1.35, 0.5, 1),
+    width 420ms cubic-bezier(0.3, 1.35, 0.5, 1),
+    scale 220ms var(--ease-out),
+    background-color 220ms var(--ease-out),
+    box-shadow 220ms var(--ease-out);
+}
+
+/* Зажали меню — линза чуть увеличивается и светлеет, как будто приподнялась над стеклом */
+.tabbar.pressed .tabbar-lens {
+  scale: 1.08;
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 4px 14px rgba(0, 0, 0, 0.28);
+}
+
+/* Ведём пальцем — линза едет за ним без задержки, ширина подстраивается под вкладку */
+.tabbar.dragging .tabbar-lens {
+  transition:
+    transform 70ms linear,
+    width 180ms var(--ease-out),
+    scale 220ms var(--ease-out),
+    background-color 220ms var(--ease-out),
+    box-shadow 220ms var(--ease-out);
 }
 
 .tabbar-item > * {
   position: relative;
 }
 
+.tabbar-item {
+  transition: color 160ms var(--ease-out);
+}
+
 .tabbar-item.active {
   color: var(--accent-ink);
 }
 
-.tabbar-item.active::before {
-  opacity: 1;
+/* Меню само обрабатывает касания: браузер не должен прокручивать или увеличивать страницу */
+.tabbar {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
-:root[data-scheme='light'] .tabbar-item::before {
+:root[data-scheme='light'] .tabbar-lens {
   background: rgba(0, 0, 0, 0.05);
+}
+
+:root[data-scheme='light'] .tabbar.pressed .tabbar-lens {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tabbar-lens,
+  .tabbar.dragging .tabbar-lens {
+    transition: none;
+  }
+  .tabbar.pressed .tabbar-lens {
+    scale: none;
+  }
 }
 
 /* ===== Списки ===== */
